@@ -2,35 +2,255 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct Line {
-    char* text;
-    int size;
-    int allocated_size;
-} Line;
+const int INITIAL_LINE_CAPACITY = 10;
+const int INITIAL_CHAR_CAPACITY = 50;
 
 typedef struct Text {
-    Line* lines;
-    int size;
+    char** lines;
+    int* line_lengths;
+    int num_lines;
+    int allocated_lines;
 } Text;
 
-void append_text(Text* text, char* input) {
-    if (text->size == 0) {
-        text->lines = malloc(10 * sizeof(Line));
-    }
+void init_text(Text* text) {
+    text->allocated_lines = INITIAL_LINE_CAPACITY;
+    text->num_lines = 0;
+    text->lines = malloc(text->allocated_lines * sizeof(char*));
+    text->line_lengths = malloc(text->allocated_lines * sizeof(int));
+}
 
-    Line* current_line = &text->lines[text->size - 1];
+void add_line(Text* text) {
+    if (text->num_lines == text->allocated_lines) {
+        text->allocated_lines *= 2;
+        text->lines = realloc(text->lines, text->allocated_lines * sizeof(char*));
+        text->line_lengths = realloc(text->line_lengths, text->allocated_lines * sizeof(int));
+    }
+    text->lines[text->num_lines] = malloc(INITIAL_CHAR_CAPACITY * sizeof(char));
+    text->lines[text->num_lines][0] = '\0';
+    text->line_lengths[text->num_lines] = 0;
+    text->num_lines++;
+}
+
+void append_text(Text* text, char* input) {
+    if (text->num_lines == 0) {
+        add_line(text);
+    }
+    int line_idx = text->num_lines - 1;
+    int old_len = text->line_lengths[line_idx];
     int input_len = strlen(input);
 
-    if (current_line->size + input_len + 1 > current_line->allocated_size) {
-        if (current_line->allocated_size == 0) {
-            current_line->allocated_size = 10;
-        }
-        else {
-            current_line->allocated_size = current_line->allocated_size * 2;
-        }
-        current_line->text = realloc(current_line->text, current_line->allocated_size * sizeof(char));
+    text->lines[line_idx] = realloc(text->lines[line_idx], old_len + input_len + 1);
+    strcpy(text->lines[line_idx] + old_len, input);
+    text->line_lengths[line_idx] += input_len;
+}
+
+void print_text(Text* text) {
+    for (int i = 0; i < text->num_lines; i++) {
+        printf("%s\n", text->lines[i]);
+    }
+}
+
+void save_to_file(Text* text, char* file_name) {
+    FILE* file = fopen(file_name, "w");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return;
     }
 
-    strcat(current_line->text, input);
-    current_line->size += input_len;
+    for (int i = 0; i < text->num_lines; i++) {
+        fputs(text->lines[i], file);
+        fputc('\n', file);
+    }
+
+    fclose(file);
+    printf("Text has been saved successfully\n");
 }
+
+void free_text(Text* text) {
+    for (int i = 0; i < text->num_lines; i++) {
+        free(text->lines[i]);
+    }
+    free(text->lines);
+    free(text->line_lengths);
+}
+
+void load_from_file(Text* text, char* file_name) {
+    FILE* file = fopen(file_name, "r");
+    if (file == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    free_text(text);
+    init_text(text);
+
+    char buffer[256];
+
+    while (fgets(buffer, sizeof(buffer), file)) {
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+            len--;
+        }
+        add_line(text);
+        strcpy(text->lines[text->num_lines - 1], buffer);
+        text->line_lengths[text->num_lines - 1] = len;
+    }
+
+    fclose(file);
+    printf("Text has been loaded successfully\n");
+}
+
+void insert_text(Text* text, int line_index, int char_index, char* insert_str) {
+    if (line_index < 0 || line_index >= text->num_lines) {
+        printf("There isn`t line with this index");
+        return;
+    }
+    int old_len = text->line_lengths[line_index];
+    int insert_len = strlen(insert_str);
+
+    if (char_index < 0) {
+        char_index = 0;
+    }
+    if (char_index > old_len) {
+        char_index = old_len;
+    }
+
+    text->lines[line_index] = realloc(text->lines[line_index], old_len + insert_len + 1);
+
+    memmove(text->lines[line_index] + char_index + insert_len,
+            text->lines[line_index] + char_index,
+            old_len - char_index + 1);
+
+    memcpy(text->lines[line_index] + char_index, insert_str, insert_len);
+
+    text->line_lengths[line_index] = old_len + insert_len;
+}
+
+void search_text(Text* text, char* query) {
+    int query_len = strlen(query);
+    for (int i = 0; i < text->num_lines; i++) {
+        char* line = text->lines[i];
+        int line_len = text->line_lengths[i];
+        for (int j = 0; j <= line_len - query_len; j++) {
+            if (strncmp(line + j, query, query_len) == 0) {
+                printf("Text is present in this position: %d %d\n", i, j);
+            }
+        }
+    }
+}
+
+void clear_console() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
+
+void print_menu() {
+    printf("Choose the command:\n"
+           "1 - Append text\n"
+           "2 - Start new line\n"
+           "3 - Save to file\n"
+           "4 - Load from file\n"
+           "5 - Print text\n"
+           "6 - Insert text by line/index\n"
+           "7 - Search\n"
+           "0 - Exit\n");
+}
+
+
+int main() {
+    Text* text = malloc(sizeof(Text));
+    init_text(text);
+
+    while (1) {
+        print_menu();
+
+        int command;
+        char buffer[10];
+        printf("> ");
+        fgets(buffer, sizeof(buffer), stdin);
+        sscanf(buffer, "%d", &command);
+
+        clear_console();
+
+        switch (command) {
+            case 0:
+                printf("Goodbye!\n");
+                free_text(text);
+                return 0;
+
+            case 1: {
+                char input[256];
+                printf("Enter text to append: ");
+                fgets(input, sizeof(input), stdin);
+                input[strcspn(input, "\n")] = '\0';
+                append_text(text, input);
+                break;
+            }
+
+            case 2:
+                add_line(text);
+                printf("New line is started\n");
+                break;
+
+            case 3: {
+                char filename[100];
+                printf("Enter the file name for saving: ");
+                fgets(filename, sizeof(filename), stdin);
+                filename[strcspn(filename, "\n")] = '\0';
+                save_to_file(text, filename);
+                break;
+            }
+
+            case 4: {
+                char filename[100];
+                printf("Enter the file name for loading: ");
+                fgets(filename, sizeof(filename), stdin);
+                filename[strcspn(filename, "\n")] = '\0';
+                load_from_file(text, filename);
+                break;
+            }
+
+            case 5:
+                print_text(text);
+                break;
+
+            case 6: {
+                int line, index;
+                char insert_str[256];
+                printf("Choose line and index: ");
+                scanf("%d %d", &line, &index);
+                getchar();
+                printf("Enter text to insert: ");
+                fgets(insert_str, sizeof(insert_str), stdin);
+                insert_str[strcspn(insert_str, "\n")] = '\0';
+                insert_text(text, line, index, insert_str);
+                break;
+            }
+
+            case 7: {
+                char query[100];
+                printf("Enter text to search: ");
+                fgets(query, sizeof(query), stdin);
+                query[strcspn(query, "\n")] = '\0';
+                search_text(text, query);
+                break;
+            }
+
+            default:
+                printf("The command is not implemented\n");
+        }
+
+        printf("\nPress Enter to continue...");
+        getchar();
+    }
+
+    return 0;
+}
+
+
+

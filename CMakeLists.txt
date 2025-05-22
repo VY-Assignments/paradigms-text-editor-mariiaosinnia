@@ -3,4 +3,5 @@ project(paradigms_text_editor_mariiaosinnia C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(paradigms_text_editor_mariiaosinnia main.c)
+add_executable(paradigms_text_editor_mariiaosinnia main.c
+        header.h)
