@@ -84,7 +84,7 @@ void load_from_file(Text* text, char* file_name) {
     free_text(text);
     init_text(text);
 
-    char buffer[256];
+    char buffer[512];
 
     while (fgets(buffer, sizeof(buffer), file)) {
         size_t len = strlen(buffer);
@@ -167,6 +167,7 @@ int main() {
     init_text(text);
 
     while (1) {
+        clear_console();
         print_menu();
 
         int command;
@@ -174,8 +175,6 @@ int main() {
         printf("> ");
         fgets(buffer, sizeof(buffer), stdin);
         sscanf(buffer, "%d", &command);
-
-        clear_console();
 
         switch (command) {
             case 0:
