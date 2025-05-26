@@ -3,7 +3,6 @@
 #include <string.h>
 
 const int INITIAL_LINE_CAPACITY = 10;
-const int INITIAL_CHAR_CAPACITY = 50;
 
 typedef struct Text {
     char** lines;
@@ -25,7 +24,7 @@ void add_line(Text* text) {
         text->lines = realloc(text->lines, text->allocated_lines * sizeof(char*));
         text->line_lengths = realloc(text->line_lengths, text->allocated_lines * sizeof(int));
     }
-    text->lines[text->num_lines] = malloc(INITIAL_CHAR_CAPACITY * sizeof(char));
+    text->lines[text->num_lines] = malloc(1);
     text->lines[text->num_lines][0] = '\0';
     text->line_lengths[text->num_lines] = 0;
     text->num_lines++;
@@ -77,7 +76,7 @@ void free_text(Text* text) {
 void load_from_file(Text* text, char* file_name) {
     FILE* file = fopen(file_name, "r");
     if (file == NULL) {
-        perror("Error opening file");
+        printf("Error opening file");
         return;
     }
 
@@ -90,11 +89,9 @@ void load_from_file(Text* text, char* file_name) {
         size_t len = strlen(buffer);
         if (len > 0 && buffer[len - 1] == '\n') {
             buffer[len - 1] = '\0';
-            len--;
         }
         add_line(text);
-        strcpy(text->lines[text->num_lines - 1], buffer);
-        text->line_lengths[text->num_lines - 1] = len;
+        append_text(text, buffer);
     }
 
     fclose(file);
