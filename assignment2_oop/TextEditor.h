@@ -1,10 +1,7 @@
-﻿//
-// Created by Legion on 26.05.2025.
-//
-
-#ifndef TEXTEDITOR_H
+﻿#ifndef TEXTEDITOR_H
 #define TEXTEDITOR_H
-
+#include "Cursor.h"
+#include "Stack.h"
 
 
 class TextEditor {
@@ -23,13 +20,26 @@ public:
     void search_text(const char* query);
     void clear_console();
     void print_menu();
+
+    void delete_text(int num_symbols);
+    void undo();
+    void redo();
+    void cut(int num_symbols);
+    void copy(int num_symbols);
+    void paste();
+    void insert_replacement(char* input);
+
 private:
-    char** lines;
+    char** text;
     int* line_lengths;
     int num_lines;
     int allocated_lines;
+    char* clipboard;
+
+
+    Cursor cursor;
+    Stack undo_stack;
+    Stack redo_stack;
 };
 
-
-
-#endif //TEXTEDITOR_H
+#endif

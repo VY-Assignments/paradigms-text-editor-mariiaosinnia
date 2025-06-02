@@ -14,4 +14,10 @@ add_executable(task2
         assignment2_oop/main.cpp
         assignment2_oop/TextEditor.cpp
         assignment2_oop/TextEditor.h
+        assignment2_oop/Stack.cpp
+        assignment2_oop/Stack.h
+        assignment2_oop/Cursor.cpp
+        assignment2_oop/Cursor.h
+        assignment2_oop/Snapshot.cpp
+        assignment2_oop/Snapshot.h
 )

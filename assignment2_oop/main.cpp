@@ -7,12 +7,12 @@ int main() {
     TextEditor text_editor;
     text_editor.init_text();
 
-    while (1) {
-        text_editor.print_menu();
+    text_editor.print_menu();
 
+    while (1) {
         int command;
         char buffer[10];
-        printf("> ");
+        printf("Enter command number > ");
         fgets(buffer, sizeof(buffer), stdin);
         sscanf(buffer, "%d", &command);
 
@@ -33,7 +33,7 @@ int main() {
 
             case 2:
                 text_editor.add_line();
-                printf("New line is started\n");
+                printf("New line is started");
                 break;
 
             case 3: {
@@ -60,10 +60,11 @@ int main() {
 
             case 6: {
                 int line, index;
+                char temp[20];
                 char insert_str[256];
                 printf("Choose line and index: ");
-                scanf("%d %d", &line, &index);
-                getchar();
+                fgets(temp, sizeof(temp), stdin);
+                sscanf(temp, "%d %d", &line, &index);
                 printf("Enter text to insert: ");
                 fgets(insert_str, sizeof(insert_str), stdin);
                 insert_str[strcspn(insert_str, "\n")] = '\0';
@@ -80,15 +81,61 @@ int main() {
                 break;
             }
 
+            case 8: {
+                int count;
+                char temp[20];
+                printf("Number of symbols to delete: ");
+                fgets(temp, sizeof(temp), stdin);
+                sscanf(temp, "%d", &count);
+                text_editor.delete_text(count);
+                break;
+            }
+
+            case 9:
+                text_editor.undo();
+                break;
+
+            case 10:
+                text_editor.redo();
+                break;
+
+            case 11: {
+                int count;
+                char temp[20];
+                printf("Number of symbols to cut: ");
+                fgets(temp, sizeof(temp), stdin);
+                sscanf(temp, "%d", &count);
+                text_editor.cut(count);
+                break;
+            }
+
+            case 12:
+                text_editor.paste();
+                break;
+
+            case 13: {
+                int count;
+                char temp[20];
+                printf("Number of symbols to copy: ");
+                fgets(temp, sizeof(temp), stdin);
+                sscanf(temp, "%d", &count);
+                text_editor.copy(count);
+                break;
+            }
+
+            case 14: {
+                char input[256];
+                printf("Write text to insert (with replacement): ");
+                fgets(input, sizeof(input), stdin);
+                input[strcspn(input, "\n")] = '\0';
+                text_editor.insert_replacement(input);
+                break;
+            }
+
             default:
                 printf("The command is not implemented\n");
         }
-        printf("\nPress Enter to continue");
-        getchar();
     }
 
     return 0;
 }
-
-
-
