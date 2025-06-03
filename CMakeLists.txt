@@ -23,7 +23,7 @@ add_executable(task2
 )
 
 add_executable(task3
-        assignment3_Cesar/Cesar.cpp
-        assignment3_Cesar/Cesar.h
-        assignment3_Cesar/main.cpp
+        assignment3_Caesar/caesar.cpp
+        assignment3_Caesar/caesar.h
+        assignment3_Caesar/main.cpp
 )
