@@ -21,3 +21,9 @@ add_executable(task2
         assignment2_oop/Snapshot.cpp
         assignment2_oop/Snapshot.h
 )
+
+add_executable(task3
+        assignment3_Cesar/Cesar.cpp
+        assignment3_Cesar/Cesar.h
+        assignment3_Cesar/main.cpp
+)
