@@ -1,3 +1,9 @@
-﻿//
-// Created by Legion on 03.06.2025.
-//
+﻿#include "caesar.h"
+#include <cstdio>
+
+int main() {
+    char* result;
+    result = encrypt("Hello, world!", 5);
+    printf(result);
+    return 0;
+}

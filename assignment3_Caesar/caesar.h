@@ -4,5 +4,4 @@
 char* encrypt(char* rawText, int key);
 char* decrypt(char* encryptedText, int key);
 
-
-#endif //CAESAR_H
+#endif
