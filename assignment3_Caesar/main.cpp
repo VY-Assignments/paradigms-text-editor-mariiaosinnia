@@ -2,8 +2,7 @@
 #include <cstdio>
 
 int main() {
-    char* result;
-    result = encrypt("Hello, world!", 5);
-    printf(result);
+    printf(encrypt("Hello, world!", 5));
+    printf(decrypt(encrypt("Hello, world!", 5), 5));
     return 0;
 }
