@@ -5,7 +5,7 @@
 
 const int INITIAL_LINE_CAPACITY = 10;
 
-TextEditor::TextEditor(): undo_stack(4), redo_stack(4){
+TextEditor::TextEditor(): undo_stack(3), redo_stack(3){
     init_text();
     clipboard = nullptr;
 
@@ -29,6 +29,8 @@ void TextEditor::init_text() {
 }
 
 void TextEditor::add_line() {
+    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+
     if (num_lines == allocated_lines) {
         allocated_lines *= 2;
         text = (char**)realloc(text, allocated_lines * sizeof(char*));
@@ -42,12 +44,13 @@ void TextEditor::add_line() {
     cursor.set_line(num_lines - 1);
     cursor.set_char(0);
 
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
     redo_stack.Clear();
 
 }
 
 void TextEditor::append_text(const char* input) {
+    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+
     if (num_lines == 0) {
         add_line();
     }
@@ -62,10 +65,7 @@ void TextEditor::append_text(const char* input) {
     cursor.set_line(line_idx);
     cursor.set_char(line_lengths[line_idx]);
 
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
     redo_stack.Clear();
-
 }
 
 void TextEditor::print_text() {
@@ -124,6 +124,8 @@ void TextEditor::load_from_file(const char* file_name) {
 }
 
 void TextEditor::insert_text(int line_index, int char_index, const char* insert_str) {
+    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+
     if (line_index < 0 || line_index >= num_lines) {
         printf("There isn`t line with this index");
         return;
@@ -151,11 +153,7 @@ void TextEditor::insert_text(int line_index, int char_index, const char* insert_
     cursor.set_line(line_index);
     cursor.set_char(char_index + insert_len);
 
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
     redo_stack.Clear();
-
-
 }
 
 void TextEditor::search_text(const char* query) {
@@ -202,6 +200,8 @@ void TextEditor::print_menu() {
 //Assignment 2
 
 void TextEditor::delete_text(int num_symbols) {
+    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+
     int line_index = cursor.get_line();
     int char_index = cursor.get_char();
     if (line_index < 0 || line_index >= num_lines) return;
@@ -236,7 +236,6 @@ void TextEditor::delete_text(int num_symbols) {
 
     cursor.set_char(char_index - to_delete);
 
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
     redo_stack.Clear();
 }
 
@@ -248,9 +247,7 @@ void TextEditor::undo() {
 
     redo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
 
-    undo_stack.Pop();
-
-    Snapshot* snapshot = undo_stack.Peek();
+    Snapshot* snapshot = undo_stack.Pop();
     if (!snapshot) {
         printf("[Undo] No snapshot to restore.\n");
         return;
@@ -260,14 +257,15 @@ void TextEditor::undo() {
         delete[] text[i];
     }
     delete[] text;
+    delete[] line_lengths;
 
     num_lines = snapshot->get_num_lines();
     cursor.set_line(snapshot->get_cursor_line());
     cursor.set_char(snapshot->get_cursor_char());
 
     text = new char*[num_lines];
-    char** snap_text = snapshot->get_text();
     line_lengths = new int[num_lines];
+    char** snap_text = snapshot->get_text();
 
     for (int i = 0; i < num_lines; ++i) {
         int len = strlen(snap_text[i]);
@@ -275,6 +273,8 @@ void TextEditor::undo() {
         strcpy(text[i], snap_text[i]);
         line_lengths[i] = len;
     }
+
+    delete snapshot;
 }
 
 void TextEditor::redo() {
@@ -283,27 +283,28 @@ void TextEditor::redo() {
         return;
     }
 
-    Snapshot* snapshot = redo_stack.Peek();
+    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+
+    Snapshot* snapshot = redo_stack.Pop();
     if (!snapshot) {
         printf("[Redo] No snapshot to restore.\n");
         return;
     }
 
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
     for (int i = 0; i < num_lines; ++i) {
         delete[] text[i];
     }
     delete[] text;
+    delete[] line_lengths;
 
     num_lines = snapshot->get_num_lines();
     cursor.set_line(snapshot->get_cursor_line());
     cursor.set_char(snapshot->get_cursor_char());
 
     text = new char*[num_lines];
+    line_lengths = new int[num_lines];
     char** snap_text = snapshot->get_text();
 
-    line_lengths = new int[num_lines];
     for (int i = 0; i < num_lines; ++i) {
         int len = strlen(snap_text[i]);
         text[i] = new char[len + 1];
@@ -311,9 +312,8 @@ void TextEditor::redo() {
         line_lengths[i] = len;
     }
 
-    redo_stack.Pop();
+    delete snapshot;
 }
-
 
 void TextEditor::copy(int num_symbols) {
     if (clipboard) {
@@ -325,19 +325,20 @@ void TextEditor::copy(int num_symbols) {
     int pos = cursor.get_char();
 
     if (line < 0 || line >= num_lines) return;
-    if (pos < 0 || pos >= line_lengths[line]) return;
+    if (pos <= 0) return;
 
     int copy_len = num_symbols;
-    if (pos + copy_len > line_lengths[line]) {
-        copy_len = line_lengths[line] - pos;
-    }
+    if (copy_len > pos) copy_len = pos;
 
     clipboard = new char[copy_len + 1];
-    strncpy(clipboard, text[line] + pos, copy_len);
+    strncpy(clipboard, text[line] + pos - copy_len, copy_len);
     clipboard[copy_len] = '\0';
 }
 
+
 void TextEditor::cut(int num_symbols) {
+    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+
     int line = cursor.get_line();
     int pos = cursor.get_char();
 
@@ -351,14 +352,13 @@ void TextEditor::cut(int num_symbols) {
     strncpy(clipboard, text[line] + pos - num_symbols, num_symbols);
     clipboard[num_symbols] = '\0';
 
-    int new_len = line_lengths[line] - num_symbols;
+    int old_len = line_lengths[line];
+    int new_len = old_len - num_symbols;
 
     char* new_line = new char[new_len + 1];
 
     strncpy(new_line, text[line], pos - num_symbols);
-
     strcpy(new_line + pos - num_symbols, text[line] + pos);
-
     new_line[new_len] = '\0';
 
     delete[] text[line];
@@ -367,12 +367,13 @@ void TextEditor::cut(int num_symbols) {
 
     cursor.set_char(pos - num_symbols);
 
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
     redo_stack.Clear();
 }
 
 
 void TextEditor::paste() {
+    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+
     if (!clipboard) return;
 
     int line = cursor.get_line();
@@ -398,11 +399,12 @@ void TextEditor::paste() {
 
     cursor.set_char(pos + clip_len);
 
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
     redo_stack.Clear();
 }
 
 void TextEditor::insert_replacement(char* input) {
+    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+
     int line = cursor.get_line();
     int pos = cursor.get_char();
 
@@ -429,8 +431,6 @@ void TextEditor::insert_replacement(char* input) {
     line_lengths[line] = new_len;
 
     cursor.set_char(insert_pos + input_len);
-
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
 
     redo_stack.Clear();
 }

@@ -6,7 +6,7 @@ public:
     ~Stack();
 
     void Push(char** text, int num_lines, int cursor_line, int cursor_char);
-    void Pop();
+    Snapshot* Pop();
     Snapshot* Peek();
     bool isEmpty();
     int Size();

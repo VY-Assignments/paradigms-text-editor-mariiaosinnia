@@ -1,5 +1,8 @@
 ﻿#include "Stack.h"
 
+#include <cstdio>
+#include <string.h>
+
 Stack::Stack(int in_capacity) {
     capacity = in_capacity;
     size = 0;
@@ -25,11 +28,17 @@ void Stack::Push(char** text, int num_lines, int cursor_line, int cursor_char) {
     size++;
 }
 
-void Stack::Pop() {
-    if (size == 0) return;
-    delete snapshots[size - 1];
+Snapshot* Stack::Pop() {
+    if (size == 0) return nullptr;
+
+    Snapshot* last = snapshots[size - 1];
+    snapshots[size - 1] = nullptr;
     size--;
+
+    return last;
 }
+
+
 
 Snapshot* Stack::Peek() {
     if (size == 0) return nullptr;
@@ -63,4 +72,6 @@ void Stack::Clear() {
     }
     size = 0;
 }
+
+
 
