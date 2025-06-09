@@ -1,6 +1,7 @@
-﻿#include "caesar.h"
+﻿#include <cctype>
 #include <cstring>
-#include <bits/locale_facets.h>
+#include "caesar.h"
+
 
 const char* ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 
@@ -57,6 +58,8 @@ char* decrypt(char* encryptedText, int key) {
 
     return decrypted_text;
 }
+
+
 
 
 
