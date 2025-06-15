@@ -27,3 +27,20 @@ add_executable(task3
         assignment3_Caesar/dll/main.cpp
         assignment3_Caesar/static/caesar.h
 )
+
+add_executable(task4
+        assignment4/main.cpp
+        assignment4/TextEditor.cpp
+        assignment4/TextEditor.h
+        assignment4/Stack.cpp
+        assignment4/Stack.h
+        assignment4/Cursor.cpp
+        assignment4/Cursor.h
+        assignment4/Snapshot.cpp
+        assignment4/Snapshot.h
+        assignment4/Line.h
+        assignment4/TextLine.cpp
+        assignment4/TextLine.h
+        assignment4/ContactLine.cpp
+        assignment4/ContactLine.h
+)
