@@ -43,4 +43,6 @@ add_executable(task4
         assignment4/TextLine.h
         assignment4/ContactLine.cpp
         assignment4/ContactLine.h
+        assignment4/CheckListLine.cpp
+        assignment4/CheckListLine.h
 )
