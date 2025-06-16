@@ -63,5 +63,10 @@ char *ContactLine::deserialize(uint8_t *buffer, uint32_t length) {
     return result;
 }
 
+Line *ContactLine::copy() {
+    return new ContactLine(this->contact, this->email);
+}
+
+
 
 
