@@ -13,8 +13,8 @@ private:
     const char* prefix_task_uncompleted = "[x]";
 public:
     CheckListLine(std::string& task) : task(task) {};
-    uint8_t* serialize(uint8_t *buffer, uint32_t &length) override;
-    char *deserialize(uint8_t *buffer, uint32_t length) override;
+    uint8_t* serialize(uint32_t &length) override;
+    void deserialize(uint8_t *buffer, uint32_t length) override;
     Line* copy() override;
 };
 
