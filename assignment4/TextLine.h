@@ -10,8 +10,8 @@ private:
     const char* prefix = "Text: ";
 public:
     TextLine(std::string& t) : text(t) {}
-    uint8_t* serialize(uint8_t* buffer, uint32_t& length) override;
-    char* deserialize(uint8_t* buffer, uint32_t length) override;
+    uint8_t* serialize(uint32_t& length) override;
+    void deserialize(uint8_t* buffer, uint32_t length) override;
     Line* copy() override;
 };
 

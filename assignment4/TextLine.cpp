@@ -4,11 +4,14 @@
 #include <stdint.h>
 
 
-uint8_t* TextLine::serialize(uint8_t* buffer, uint32_t& length) {
+uint8_t* TextLine::serialize(uint32_t& length) {
     uint32_t offset = 0;
     uint32_t text_len = text.length();
-
     uint8_t prefix_len = strlen(prefix);
+
+    length = prefix_len + sizeof(text_len) + text_len;
+    uint8_t* buffer = new uint8_t[length];
+
     memcpy(buffer, prefix, prefix_len);
     offset += prefix_len;
 
@@ -18,17 +21,15 @@ uint8_t* TextLine::serialize(uint8_t* buffer, uint32_t& length) {
     memcpy(buffer + offset, text.c_str(), text_len);
     offset += text_len;
 
-    length = offset;
-
     return buffer;
 }
 
-char* TextLine::deserialize(uint8_t* buffer, uint32_t length) {
+void TextLine::deserialize(uint8_t* buffer, uint32_t length) {
     uint32_t offset = 0;
     uint8_t prefix_len = strlen(prefix);
 
     if (length < prefix_len + sizeof(uint32_t)) {
-        return nullptr;
+        return;
     }
 
     offset += prefix_len;
@@ -38,7 +39,7 @@ char* TextLine::deserialize(uint8_t* buffer, uint32_t length) {
     offset += sizeof(text_len);
 
     if (offset + text_len > length) {
-        return nullptr;
+        return;
     }
 
     char* result = new char[prefix_len + text_len + 1];
@@ -47,7 +48,8 @@ char* TextLine::deserialize(uint8_t* buffer, uint32_t length) {
     memcpy(result + prefix_len, buffer + offset, text_len);
     result[prefix_len + text_len] = '\0';
 
-    return result;
+    text = std::string(result);
+    delete[] result;
 }
 
 Line *TextLine::copy() {
