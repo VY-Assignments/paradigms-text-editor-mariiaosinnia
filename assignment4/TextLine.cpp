@@ -28,7 +28,7 @@ void TextLine::deserialize(uint8_t* buffer, uint32_t length) {
     uint32_t offset = 0;
     uint8_t prefix_len = strlen(prefix);
 
-    if (length < prefix_len + sizeof(uint32_t)) {
+    if (length < prefix_len + sizeof(uint8_t)) {
         return;
     }
 
