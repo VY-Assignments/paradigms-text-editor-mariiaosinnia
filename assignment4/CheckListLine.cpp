@@ -38,7 +38,7 @@ void CheckListLine::deserialize(uint8_t *buffer, uint32_t length) {
         is_completed = false;
     }
     else {
-        return;;
+        return;
     }
 
     offset += prefix_len;
