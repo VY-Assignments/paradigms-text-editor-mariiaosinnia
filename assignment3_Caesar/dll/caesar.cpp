@@ -14,15 +14,17 @@ extern "C"{
             if (!isalpha(rawText[i])) {
                 encrypted_text[position++] = rawText[i];
             }
-            for (int j = 0; j < strlen(ALPHABET); j++) {
-                if (tolower(rawText[i]) == ALPHABET[j]) {
-                    char encrypted_char = ALPHABET[(j + key) % 26];
+            else {
+                for (int j = 0; j < strlen(ALPHABET); j++) {
+                    if (tolower(rawText[i]) == ALPHABET[j]) {
+                        char encrypted_char = ALPHABET[(j + key) % 26];
 
-                    if (is_upper) {
-                        encrypted_char = toupper(encrypted_char);
+                        if (is_upper) {
+                            encrypted_char = toupper(encrypted_char);
+                        }
+                        encrypted_text[position++] = encrypted_char;
+                        break;
                     }
-                    encrypted_text[position++] = encrypted_char;
-                    break;
                 }
             }
         }
@@ -32,7 +34,7 @@ extern "C"{
     }
 
     __declspec(dllexport) char* decrypt(char* encryptedText, int key) {
-        char* decrypted_text = new char[strlen(encryptedText)];
+        char* decrypted_text = new char[strlen(encryptedText) + 1];
         int position = 0;
 
         for (int i = 0; i < strlen(encryptedText); i++) {
