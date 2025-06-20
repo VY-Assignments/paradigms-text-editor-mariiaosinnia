@@ -62,3 +62,8 @@ void CheckListLine::deserialize(uint8_t *buffer, uint32_t length) {
     delete result;
 }
 
+Line* CheckListLine::copy() {
+    return new CheckListLine(this->task, this->is_completed);
+}
+
+
