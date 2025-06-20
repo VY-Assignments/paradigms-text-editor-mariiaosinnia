@@ -45,4 +45,6 @@ add_executable(task4
         assignment4/ContactLine.h
         assignment4/CheckListLine.cpp
         assignment4/CheckListLine.h
+        assignment4/CaesarCipher.cpp
+        assignment4/CaesarCipher.h
 )
