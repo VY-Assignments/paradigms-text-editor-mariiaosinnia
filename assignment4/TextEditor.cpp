@@ -5,15 +5,16 @@
 
 const int INITIAL_LINE_CAPACITY = 10;
 
-TextEditor::TextEditor(): undo_stack(3), redo_stack(3){
+TextEditor::TextEditor(): undo_stack(3), redo_stack(3), caesar_cipher("caesar.dll"), clipboard(nullptr){
     init_text();
-    clipboard = nullptr;
-
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
 }
 
 TextEditor::~TextEditor() {
-    free_text();
+    for (int i = 0; i < num_lines; ++i) {
+        delete lines[i];
+    }
+    delete[] lines;
+
     if (clipboard) {
         delete[] clipboard;
         clipboard = nullptr;
@@ -25,8 +26,7 @@ void TextEditor::init_text() {
     allocated_lines = INITIAL_LINE_CAPACITY;
     num_lines = 0;
 
-    text = (char**)malloc(allocated_lines * sizeof(char*));
-    line_lengths = (int*)malloc(allocated_lines * sizeof(int));
+    lines = new Line*[allocated_lines];
 }
 
 void TextEditor::add_line() {
@@ -435,6 +435,7 @@ void TextEditor::insert_replacement(char* input) {
 
     redo_stack.Clear();
 }
+
 
 
 

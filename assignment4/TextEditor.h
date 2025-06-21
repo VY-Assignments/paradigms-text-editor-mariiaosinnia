@@ -1,7 +1,9 @@
 ﻿#ifndef TEXTEDITOR_H
 #define TEXTEDITOR_H
+#include "CaesarCipher.h"
 #include "Cursor.h"
 #include "Stack.h"
+#include "Line.h"
 
 
 class TextEditor {
@@ -28,18 +30,21 @@ public:
     void copy(int num_symbols);
     void paste();
     void insert_replacement(char* input);
+    void encrypt_text();
+    void decrypt_text();
+    void save_encrypted_text(char* file_path);
+    void load_encrypted_text(char* file_path);
 
 private:
-    char** text;
-    int* line_lengths;
+    Line** lines;
     int num_lines;
     int allocated_lines;
     char* clipboard;
 
-
     Cursor cursor;
     Stack undo_stack;
     Stack redo_stack;
+    CaesarCipher caesar_cipher;
 };
 
 #endif
