@@ -68,8 +68,32 @@ void ContactLine::deserialize(uint8_t *buffer, uint32_t length) {
 }
 
 Line *ContactLine::copy() {
-    return new ContactLine(this->contact, this->email);
+    return new ContactLine(contact, email);
 }
+
+char *ContactLine::get_type() {
+    return "Contact";
+}
+
+
+void ContactLine::append_text(const char *input) {
+    if (!input) return;
+
+    std::string str(input);
+    size_t pos = str.find_last_of(' ');
+
+    if (pos != std::string::npos && str.substr(pos + 1).find('@') != std::string::npos) {
+        contact = str.substr(0, pos);
+        email = str.substr(pos + 1);
+    } else if (str.find('@') != std::string::npos) {
+        contact.clear();
+        email = str;
+    } else {
+        contact = str;
+        email.clear();
+    }
+}
+
 
 
 
