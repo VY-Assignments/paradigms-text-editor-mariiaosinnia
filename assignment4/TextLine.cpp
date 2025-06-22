@@ -57,10 +57,24 @@ Line *TextLine::copy() {
 }
 
 char *TextLine::get_type() {
-    return "TEXT";
+    return "Text";
 }
 
-void TextLine::append_text(const char* input) {
+char *TextLine::get_text() {
+    return text;
+}
+
+const char *TextLine::to_string() {
+    if (text) {
+        full_line = std::string(prefix) + text;
+    } else {
+        full_line = std::string(prefix);
+    }
+    return full_line.c_str();
+}
+
+
+void TextLine::append_text(char* input) {
     int input_len = strlen(input);
     int old_len = 0;
     if (text != nullptr) {

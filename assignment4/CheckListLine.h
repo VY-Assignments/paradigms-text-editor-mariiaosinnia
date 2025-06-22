@@ -18,8 +18,9 @@ public:
     uint8_t* serialize(uint32_t &length) override;
     void deserialize(uint8_t *buffer, uint32_t length) override;
     Line* copy() override;
-    char* get_type();
-    void append_text(char* input);
+    char* get_type() override;
+    const char* to_string() override;
+    void append_text(char* input) override;
 };
 
 

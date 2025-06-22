@@ -69,6 +69,30 @@ char *CheckListLine::get_type() {
     return "Check list";
 }
 
+const char *CheckListLine::to_string() {
+    const char* prefix;
+    if (is_completed) {
+        prefix = prefix_task_completed;
+    } else {
+        prefix = prefix_task_uncompleted;
+    }
+
+    int prefix_len = strlen(prefix);
+    int task_len = (task != nullptr) ? strlen(task) : 0;
+
+    char* result = new char[prefix_len + task_len + 1];
+
+    strcpy(result, prefix);
+
+    if (task != nullptr) {
+        strcat(result, task);
+    } else {
+        result[prefix_len] = '\0';
+    }
+
+    return result;
+}
+
 
 void CheckListLine::append_text(char *input) {
     const char* prefix;

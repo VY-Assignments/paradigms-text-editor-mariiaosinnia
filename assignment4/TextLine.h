@@ -12,6 +12,7 @@ private:
     char* text;
     const char* prefix = "Text: ";
     uint32_t length;
+    std::string full_line;
 
     Cursor cursor;
 public:
@@ -20,9 +21,11 @@ public:
 
     void deserialize(uint8_t* buffer, uint32_t length) override;
     Line* copy() override;
-    char* get_type();
+    char* get_type() override;
+    char* get_text();
+    const char* to_string() override;
 
-    void append_text(const char* input);
+    void append_text(char* input) override;
     void insert_text(int char_index, const char* insert_str);
     void search_text(const char* query);
 

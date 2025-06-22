@@ -75,8 +75,17 @@ char *ContactLine::get_type() {
     return "Contact";
 }
 
+const char *ContactLine::to_string() {
+    std::string full_line = std::string(prefix) + contact + std::string(email_prefix) + email;
 
-void ContactLine::append_text(const char *input) {
+    char* result = new char[full_line.size() + 1];
+    strcpy(result, full_line.c_str());
+
+    return result;
+}
+
+
+void ContactLine::append_text(char *input) {
     if (!input) return;
 
     std::string str(input);
