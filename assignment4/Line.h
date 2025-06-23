@@ -7,9 +7,10 @@ public:
     virtual uint8_t* serialize(uint32_t& length) = 0;
     virtual void deserialize(uint8_t* buffer, uint32_t length) = 0;
     virtual Line* copy() = 0;
-    virtual void append_text(char* input);
-    virtual char* get_type();
-    virtual const char* to_string();
+    virtual void append_text(char* input) = 0;
+    virtual char* get_type() = 0;
+    virtual const char* to_string() = 0;
+    virtual ~Line();
 };
 
 #endif

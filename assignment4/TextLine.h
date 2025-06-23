@@ -1,5 +1,6 @@
 ﻿#ifndef TEXTLINE_H
 #define TEXTLINE_H
+#include <cstring>
 #include <stdint.h>
 #include <string>
 
@@ -16,7 +17,17 @@ private:
 
     Cursor cursor;
 public:
-    TextLine(char* t) : text(t) {}
+    TextLine(char* t) : text(nullptr), length(0) {
+        if (t != nullptr) {
+            size_t len = std::strlen(t);
+            text = static_cast<char*>(std::malloc(len + 1));
+            if (text != nullptr) {
+                std::memcpy(text, t, len);
+                text[len] = '\0';
+                length = len;
+            }
+        }
+    }
     uint8_t* serialize(uint32_t& length) override;
 
     void deserialize(uint8_t* buffer, uint32_t length) override;
@@ -30,9 +41,6 @@ public:
     void search_text(const char* query);
 
     void delete_text(int num_symbols);
-    // void cut(int num_symbols);
-    // void copy(int num_symbols);
-    // void paste();
     void insert_replacement(char* input);
 };
 

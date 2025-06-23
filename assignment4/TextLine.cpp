@@ -25,32 +25,31 @@ uint8_t* TextLine::serialize(uint32_t& length) {
 }
 
 void TextLine::deserialize(uint8_t* buffer, uint32_t length) {
-    uint32_t offset = 0;
     uint8_t prefix_len = strlen(prefix);
 
-    if (length < prefix_len + sizeof(uint8_t)) {
+    if (length < prefix_len + sizeof(uint32_t)) {
         return;
     }
 
-    offset += prefix_len;
+    if (memcmp(buffer, prefix, prefix_len) != 0) {
+        return;
+    }
 
     uint32_t text_len = 0;
-    memcpy(&text_len, buffer + offset, sizeof(text_len));
-    offset += sizeof(text_len);
+    memcpy(&text_len, buffer + prefix_len, sizeof(text_len));
 
-    if (offset + text_len > length) {
+    if (prefix_len + sizeof(text_len) + text_len > length) {
         return;
     }
 
-    char* result = new char[prefix_len + text_len + 1];
+    delete[] text;
 
-    memcpy(result, prefix, prefix_len);
-    memcpy(result + prefix_len, buffer + offset, text_len);
-    result[prefix_len + text_len] = '\0';
+    text = new char[text_len + 1];
 
-    text = result;
-    delete[] result;
+    memcpy(text, buffer + prefix_len + sizeof(text_len), text_len);
+    text[text_len] = '\0';
 }
+
 
 Line *TextLine::copy() {
     return new TextLine(this->text);
@@ -101,8 +100,6 @@ void TextLine::insert_text(int char_index, const char *insert_str) {
     if (char_index < 0) char_index = 0;
     if (char_index > old_len) char_index = old_len;
 
-    char* new_text = (char*)realloc(text, old_len + insert_len + 1);
-
     memmove(text + char_index + insert_len, text + char_index, old_len - char_index + 1);
     memcpy(text + char_index, insert_str, insert_len);
 
@@ -126,7 +123,6 @@ void TextLine::delete_text(int num_symbols) {
     if (to_delete <= 0) return;
 
     int old_len = length;
-    char* old_text = text;
 
     int new_len = old_len - to_delete;
     memmove(text + char_index - to_delete, text + char_index, old_len - char_index + 1); // +1 щоб захопити '\0'

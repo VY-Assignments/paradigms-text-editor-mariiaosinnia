@@ -2,7 +2,6 @@
 #define TEXTEDITOR_H
 #include "CaesarCipher.h"
 #include "Cursor.h"
-#include "Stack.h"
 #include "Line.h"
 
 
@@ -13,8 +12,8 @@ public:
 
     void init_text();
     void free_text();
-    void append_text(const char* input);
-    void add_line();
+    void append_text(char* input);
+    void add_line(int type, bool is_completed);
     void print_text();
     void save_to_file(const char* file_name);
     void load_from_file(const char* file_name);
@@ -30,10 +29,11 @@ public:
     void copy(int num_symbols);
     void paste();
     void insert_replacement(char* input);
-    void encrypt_text();
-    void decrypt_text();
+    void encrypt_text(int key);
+    void decrypt_text(int key);
     void save_encrypted_text(char* file_path);
     void load_encrypted_text(char* file_path);
+    void add_line_to_text(Line* new_line);
 
 private:
     Line** lines;
@@ -41,9 +41,13 @@ private:
     int allocated_lines;
     char* clipboard;
 
+    int current_tab = 0;
+    int tabs_count = 1;
+
+    uint8_t** encrypted_buffers;
+    uint32_t* encrypted_lengths;
+
     Cursor cursor;
-    Stack undo_stack;
-    Stack redo_stack;
     CaesarCipher caesar_cipher;
 };
 

@@ -3,24 +3,61 @@
 #include <cstring>
 #include <cstdio>
 
+#include "CheckListLine.h"
+#include "ContactLine.h"
+#include "TextLine.h"
+
 const int INITIAL_LINE_CAPACITY = 10;
 
-TextEditor::TextEditor(): undo_stack(3), redo_stack(3), caesar_cipher("caesar.dll"), clipboard(nullptr){
+TextEditor::TextEditor(): lines(nullptr), encrypted_buffers(nullptr), encrypted_lengths(nullptr), num_lines(0), allocated_lines(0),
+caesar_cipher("caesar.dll"), clipboard(nullptr){
     init_text();
 }
 
 TextEditor::~TextEditor() {
-    for (int i = 0; i < num_lines; ++i) {
-        delete lines[i];
+    if (lines) {
+        for (int i = 0; i < num_lines; ++i) {
+            if (lines[i]) delete lines[i];
+        }
+        delete[] lines;
     }
-    delete[] lines;
 
-    if (clipboard) {
-        delete[] clipboard;
-        clipboard = nullptr;
+    delete[] clipboard;
+
+    if (encrypted_buffers) {
+        for (int i = 0; i < num_lines; ++i) {
+            if (encrypted_buffers[i]) delete[] encrypted_buffers[i];
+        }
+        delete[] encrypted_buffers;
     }
+    delete[] encrypted_lengths;
 }
 
+void TextEditor::free_text() {
+    if (lines) {
+        for (int i = 0; i < num_lines; ++i) {
+            delete lines[i];
+        }
+        delete[] lines;
+        lines = nullptr;
+    }
+
+    if (encrypted_buffers) {
+        for (int i = 0; i < num_lines; ++i) {
+            delete[] encrypted_buffers[i];
+        }
+        delete[] encrypted_buffers;
+        encrypted_buffers = nullptr;
+    }
+
+    if (encrypted_lengths) {
+        delete[] encrypted_lengths;
+        encrypted_lengths = nullptr;
+    }
+
+    num_lines = 0;
+    allocated_lines = 0;
+}
 
 void TextEditor::init_text() {
     allocated_lines = INITIAL_LINE_CAPACITY;
@@ -29,51 +66,65 @@ void TextEditor::init_text() {
     lines = new Line*[allocated_lines];
 }
 
-void TextEditor::add_line() {
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+void TextEditor::add_line(int type, bool is_completed) {
+    Line* new_line = nullptr;
+
+    if (type == 1) {
+        new_line = new TextLine((char*) "");
+    } else if (type == 2) {
+        new_line = new ContactLine(std::string(""), std::string(""));;
+    } else if (type == 3) {
+        new_line = new CheckListLine((char*) "", is_completed);
+    } else {
+        printf("Unknown line type.\n");
+        return;
+    }
 
     if (num_lines == allocated_lines) {
-        allocated_lines *= 2;
-        text = (char**)realloc(text, allocated_lines * sizeof(char*));
-        line_lengths = (int*)realloc(line_lengths, allocated_lines * sizeof(int));
+        int new_allocated = allocated_lines * 2;
+        Line** new_lines = new Line*[new_allocated];
+        for (int i = 0; i < num_lines; ++i) {
+            new_lines[i] = lines[i];
+        }
+        delete[] lines;
+        lines = new_lines;
+        allocated_lines = new_allocated;
     }
-    text[num_lines] = (char*)malloc(1);
-    text[num_lines][0] = '\0';
-    line_lengths[num_lines] = 0;
-    num_lines++;
 
+
+    lines[num_lines++] = new_line;
     cursor.set_line(num_lines - 1);
     cursor.set_char(0);
-
-    redo_stack.Clear();
-
 }
 
-void TextEditor::append_text(const char* input) {
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
+void TextEditor::append_text(char* input) {
     if (num_lines == 0) {
-        add_line();
+        add_line(1, false);
     }
     int line_idx = num_lines - 1;
-    int old_len = line_lengths[line_idx];
-    int input_len = strlen(input);
 
-    text[line_idx] = (char*)realloc(text[line_idx], old_len + input_len + 1);
-    strcpy(text[line_idx] + old_len, input);
-    line_lengths[line_idx] += input_len;
-
+    Line* current = lines[line_idx];
+    if (strcmp(current->get_type(), "Text") == 0) {
+        TextLine* text_line = (TextLine*)current;
+        text_line->append_text(input);
+        cursor.set_char(strlen(text_line->get_text()));
+    }
+    else {
+        current->append_text(input);
+    }
     cursor.set_line(line_idx);
-    cursor.set_char(line_lengths[line_idx]);
-
-    redo_stack.Clear();
 }
 
 void TextEditor::print_text() {
     for (int i = 0; i < num_lines; i++) {
-        printf("%s\n", text[i]);
+        if (lines[i] != nullptr) {
+            printf("%s\n", lines[i]->to_string());
+        } else {
+            printf("(nullptr line at index %d)\n", i);
+        }
     }
 }
+
 
 void TextEditor::save_to_file(const char* file_name) {
     FILE* file = fopen(file_name, "w");
@@ -83,7 +134,7 @@ void TextEditor::save_to_file(const char* file_name) {
     }
 
     for (int i = 0; i < num_lines; i++) {
-        fputs(text[i], file);
+        fputs(lines[i]->to_string(), file);
         fputc('\n', file);
     }
 
@@ -91,79 +142,32 @@ void TextEditor::save_to_file(const char* file_name) {
     printf("Text has been saved successfully\n");
 }
 
-void TextEditor::free_text() {
-    for (int i = 0; i < num_lines; i++) {
-        free(text[i]);
-    }
-    free(text);
-    free(line_lengths);
-}
-
-void TextEditor::load_from_file(const char* file_name) {
-    FILE* file = fopen(file_name, "r");
-    if (file == NULL) {
-        printf("Error opening file");
-        return;
-    }
-
-    free_text();
-    init_text();
-
-    char buffer[512];
-
-    while (fgets(buffer, sizeof(buffer), file)) {
-        size_t len = strlen(buffer);
-        if (len > 0 && buffer[len - 1] == '\n') {
-            buffer[len - 1] = '\0';
-        }
-        add_line();
-        append_text(buffer);
-    }
-
-    fclose(file);
-    printf("Text has been loaded successfully\n");
-}
-
 void TextEditor::insert_text(int line_index, int char_index, const char* insert_str) {
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
-    if (line_index < 0 || line_index >= num_lines) {
-        printf("There isn`t line with this index");
-        return;
+    Line* line = lines[line_index];
+    if (strcmp(line->get_type(), "Text") == 0) {
+        ((TextLine*)line)->insert_text(char_index, insert_str);
+        cursor.set_line(line_index);
+        cursor.set_char(char_index + strlen(insert_str));
+    } else {
+        printf("Insert is only supported for text lines.\n");
     }
-    int old_len = line_lengths[line_index];
-    int insert_len = strlen(insert_str);
-
-    if (char_index < 0) {
-        char_index = 0;
-    }
-    if (char_index > old_len) {
-        char_index = old_len;
-    }
-
-    text[line_index] = (char*)realloc(text[line_index], old_len + insert_len + 1);
-
-    memmove(text[line_index] + char_index + insert_len,
-            text[line_index] + char_index,
-            old_len - char_index + 1);
-
-    memcpy(text[line_index] + char_index, insert_str, insert_len);
-
-    line_lengths[line_index] = old_len + insert_len;
-
-    cursor.set_line(line_index);
-    cursor.set_char(char_index + insert_len);
-
-    redo_stack.Clear();
 }
 
 void TextEditor::search_text(const char* query) {
     int query_len = strlen(query);
-    for (int i = 0; i < num_lines; i++) {
-        char* line = text[i];
-        int line_len = line_lengths[i];
-        for (int j = 0; j <= line_len - query_len; j++) {
-            if (strncmp(line + j, query, query_len) == 0) {
+
+    for (int i = 0; i < num_lines; ++i) {
+        Line* line = lines[i];
+
+        if (strcmp(line->get_type(), "Text") != 0) {
+            continue;
+        }
+
+        char* text = ((TextLine*)line)->get_text();
+        int line_len = strlen(text);
+
+        for (int j = 0; j <= line_len - query_len; ++j) {
+            if (strncmp(text + j, query, query_len) == 0) {
                 printf("Text is present in this position: %d %d\n", i, j);
             }
         }
@@ -185,257 +189,173 @@ void TextEditor::print_menu() {
            "1  - Append text\n"
            "2  - Start new line\n"
            "3  - Save to file\n"
-           "4  - Load from file\n"
            "5  - Print text\n"
-           "6  - Insert text at line/index\n"
-           "7  - Search text\n"
-           "8  - Delete text\n"
-           "9  - Undo\n"
-           "10 - Redo\n"
-           "11 - Cut text\n"
-           "12 - Paste text\n"
-           "13 - Copy text\n"
-           "14 - Insert text with replacement\n");
+           "6 - Encrypt text (requires key)\n"
+           "7 - Save encrypted text to binary file\n"
+           "8 - Load encrypted text from binary file\n"
+           "9 - Decrypt text (requires key)\n"
+           "14 - Encrypt/Decrypt external file\n");
 }
 
 //Assignment 2
 
 void TextEditor::delete_text(int num_symbols) {
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
     int line_index = cursor.get_line();
-    int char_index = cursor.get_char();
     if (line_index < 0 || line_index >= num_lines) return;
 
-    int to_delete = num_symbols;
-    if (char_index < to_delete) {
-        to_delete = char_index;
+    Line* line = lines[line_index];
+    if (strcmp(line->get_type(), "Text") == 0) {
+        TextLine* text_line = (TextLine*)line;
+        text_line->delete_text(num_symbols);
+        cursor.set_char(cursor.get_char() - num_symbols);
+    } else {
+        printf("Delete text supported only for text lines.\n");
     }
-    if (to_delete <= 0) return;
-
-    int old_len = line_lengths[line_index];
-    char* old_line = text[line_index];
-
-    int new_len = old_len - to_delete;
-
-    char* new_line = new char[new_len + 1];
-
-    for (int i = 0; i < char_index - to_delete; i++) {
-        new_line[i] = old_line[i];
-    }
-
-    for (int i = char_index; i < old_len; i++) {
-        new_line[i - to_delete] = old_line[i];
-    }
-
-    new_line[new_len] = '\0';
-
-    delete[] old_line;
-
-    text[line_index] = new_line;
-    line_lengths[line_index] = new_len;
-
-    cursor.set_char(char_index - to_delete);
-
-    redo_stack.Clear();
-}
-
-void TextEditor::undo() {
-    if (undo_stack.Size() == 0) {
-        printf("[Undo] No more undo steps available.\n");
-        return;
-    }
-
-    redo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
-    Snapshot* snapshot = undo_stack.Pop();
-    if (!snapshot) {
-        printf("[Undo] No snapshot to restore.\n");
-        return;
-    }
-
-    for (int i = 0; i < num_lines; ++i) {
-        delete[] text[i];
-    }
-    delete[] text;
-    delete[] line_lengths;
-
-    num_lines = snapshot->get_num_lines();
-    cursor.set_line(snapshot->get_cursor_line());
-    cursor.set_char(snapshot->get_cursor_char());
-
-    text = new char*[num_lines];
-    line_lengths = new int[num_lines];
-    char** snap_text = snapshot->get_text();
-
-    for (int i = 0; i < num_lines; ++i) {
-        int len = strlen(snap_text[i]);
-        text[i] = new char[len + 1];
-        strcpy(text[i], snap_text[i]);
-        line_lengths[i] = len;
-    }
-
-    delete snapshot;
-}
-
-void TextEditor::redo() {
-    if (redo_stack.Size() == 0) {
-        printf("[Redo] No more redo steps available.\n");
-        return;
-    }
-
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
-    Snapshot* snapshot = redo_stack.Pop();
-    if (!snapshot) {
-        printf("[Redo] No snapshot to restore.\n");
-        return;
-    }
-
-    for (int i = 0; i < num_lines; ++i) {
-        delete[] text[i];
-    }
-    delete[] text;
-    delete[] line_lengths;
-
-    num_lines = snapshot->get_num_lines();
-    cursor.set_line(snapshot->get_cursor_line());
-    cursor.set_char(snapshot->get_cursor_char());
-
-    text = new char*[num_lines];
-    line_lengths = new int[num_lines];
-    char** snap_text = snapshot->get_text();
-
-    for (int i = 0; i < num_lines; ++i) {
-        int len = strlen(snap_text[i]);
-        text[i] = new char[len + 1];
-        strcpy(text[i], snap_text[i]);
-        line_lengths[i] = len;
-    }
-
-    delete snapshot;
-}
-
-void TextEditor::copy(int num_symbols) {
-    if (clipboard) {
-        delete[] clipboard;
-        clipboard = nullptr;
-    }
-
-    int line = cursor.get_line();
-    int pos = cursor.get_char();
-
-    if (line < 0 || line >= num_lines) return;
-    if (pos <= 0) return;
-
-    int copy_len = num_symbols;
-    if (copy_len > pos) copy_len = pos;
-
-    clipboard = new char[copy_len + 1];
-    strncpy(clipboard, text[line] + pos - copy_len, copy_len);
-    clipboard[copy_len] = '\0';
-}
-
-
-void TextEditor::cut(int num_symbols) {
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
-    int line = cursor.get_line();
-    int pos = cursor.get_char();
-
-    if (line < 0 || line >= num_lines) return;
-    if (pos <= 0) return;
-
-    if (num_symbols > pos) num_symbols = pos;
-
-    delete[] clipboard;
-    clipboard = new char[num_symbols + 1];
-    strncpy(clipboard, text[line] + pos - num_symbols, num_symbols);
-    clipboard[num_symbols] = '\0';
-
-    int old_len = line_lengths[line];
-    int new_len = old_len - num_symbols;
-
-    char* new_line = new char[new_len + 1];
-
-    strncpy(new_line, text[line], pos - num_symbols);
-    strcpy(new_line + pos - num_symbols, text[line] + pos);
-    new_line[new_len] = '\0';
-
-    delete[] text[line];
-    text[line] = new_line;
-    line_lengths[line] = new_len;
-
-    cursor.set_char(pos - num_symbols);
-
-    redo_stack.Clear();
-}
-
-
-void TextEditor::paste() {
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
-
-    if (!clipboard) return;
-
-    int line = cursor.get_line();
-    int pos = cursor.get_char();
-
-    if (line < 0 || line >= num_lines) return;
-    if (pos < 0 || pos > line_lengths[line]) return;
-
-    int clip_len = strlen(clipboard);
-    int new_len = line_lengths[line] + clip_len;
-
-    char* new_line = new char[new_len + 1];
-
-    strncpy(new_line, text[line], pos);
-    strcpy(new_line + pos, clipboard);
-    strcpy(new_line + pos + clip_len, text[line] + pos);
-
-    new_line[new_len] = '\0';
-
-    delete[] text[line];
-    text[line] = new_line;
-    line_lengths[line] = new_len;
-
-    cursor.set_char(pos + clip_len);
-
-    redo_stack.Clear();
 }
 
 void TextEditor::insert_replacement(char* input) {
-    undo_stack.Push(text, num_lines, cursor.get_line(), cursor.get_char());
+    int line_index = cursor.get_line();
+    if (line_index < 0 || line_index >= num_lines) return;
 
-    int line = cursor.get_line();
-    int pos = cursor.get_char();
+    Line* line = lines[line_index];
+    if (strcmp(line->get_type(), "Text") == 0) {
+        TextLine* text_line = (TextLine*)line;
+        text_line->insert_replacement(input);
+        cursor.set_char(cursor.get_char());
+    } else {
+        printf("Insert replacement is supported only for text lines.\n");
+    }
+}
 
-    if (line < 0 || line >= num_lines) return;
-    if (pos <= 0 || pos > line_lengths[line]) return;
+void TextEditor::encrypt_text(int key) {
+    if (!lines || num_lines == 0) return;
 
-    int input_len = strlen(input);
+    encrypted_buffers = new uint8_t*[num_lines]();
+    encrypted_lengths = new uint32_t[num_lines]();
 
-    int insert_pos = pos - input_len;
-    if (insert_pos < 0) insert_pos = 0;
+    for (int i = 0; i < num_lines; ++i) {
+        if (!lines[i]) {
+            encrypted_buffers[i] = nullptr;
+            encrypted_lengths[i] = 0;
+            continue;
+        }
 
-    int new_len = line_lengths[line] + input_len;
+        uint32_t length;
+        uint8_t* serialized = lines[i]->serialize(length);
 
-    char* new_line = new char[new_len + 1];
+        char* encrypted = caesar_cipher.encrypt((char*)serialized, key, length);
 
-    strncpy(new_line, text[line], insert_pos);
+        if (encrypted) {
+            uint32_t len = length;
+            encrypted_buffers[i] = new uint8_t[len + 1];
+            memcpy(encrypted_buffers[i], encrypted, len + 1);
+            encrypted_lengths[i] = len;
+        } else {
+            encrypted_buffers[i] = nullptr;
+            encrypted_lengths[i] = 0;
+        }
 
-    strcpy(new_line + insert_pos, input);
-
-    strcpy(new_line + insert_pos + input_len, text[line] + pos);
-
-    delete[] text[line];
-    text[line] = new_line;
-    line_lengths[line] = new_len;
-
-    cursor.set_char(insert_pos + input_len);
-
-    redo_stack.Clear();
+        delete[] serialized;
+    }
 }
 
 
+void TextEditor::save_encrypted_text(char* path) {
+    FILE* f = fopen(path, "wb");
+    if (!f || !encrypted_buffers || !encrypted_lengths) return;
+
+    for (int i = 0; i < num_lines; ++i) {
+        fwrite(&encrypted_lengths[i], sizeof(uint32_t), 1, f);
+        fwrite(encrypted_buffers[i], encrypted_lengths[i], 1, f);
+    }
+
+    fclose(f);
+}
+
+void TextEditor::load_encrypted_text(char* file_path) {
+    FILE* f = fopen(file_path, "rb");
+    if (!f) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    free_text();
+
+    encrypted_buffers = new uint8_t*[INITIAL_LINE_CAPACITY];
+    encrypted_lengths = new uint32_t[INITIAL_LINE_CAPACITY];
+    allocated_lines = INITIAL_LINE_CAPACITY;
+    num_lines = 0;
+
+    while (true) {
+        uint32_t len;
+        if (fread(&len, sizeof(uint32_t), 1, f) != 1) break;
+
+        uint8_t* buffer = new uint8_t[len];
+        if (fread(buffer, len, 1, f) != 1) {
+            delete[] buffer;
+            break;
+        }
+
+        if (num_lines == allocated_lines) {
+            int new_allocated = allocated_lines * 2;
+
+            uint8_t** new_buffers = new uint8_t*[new_allocated];
+            uint32_t* new_lengths = new uint32_t[new_allocated];
+
+            for (int i = 0; i < num_lines; ++i) {
+                new_buffers[i] = encrypted_buffers[i];
+                new_lengths[i] = encrypted_lengths[i];
+            }
+
+            delete[] encrypted_buffers;
+            delete[] encrypted_lengths;
+
+            encrypted_buffers = new_buffers;
+            encrypted_lengths = new_lengths;
+            allocated_lines = new_allocated;
+        }
 
 
+        encrypted_buffers[num_lines] = buffer;
+        encrypted_lengths[num_lines] = len;
+        num_lines++;
+    }
+
+    fclose(f);
+    printf("Encrypted text loaded successfully.\n");
+}
+
+Line* create_line_from_buffer(uint8_t* data) {
+    if (!data) return nullptr;
+
+    if (data[0] == 'T') return new TextLine(nullptr);
+    if (data[0] == 'C') return new ContactLine("", "");
+    if (data[0] == '[') return new CheckListLine(nullptr, false);
+
+    return nullptr;
+}
+
+
+void TextEditor::decrypt_text(int key) {
+    Line** new_lines = new Line*[allocated_lines]();
+    int valid_lines = 0;
+
+    for (int i = 0; i < num_lines; ++i) {
+    char* decrypted = caesar_cipher.decrypt((char*)encrypted_buffers[i], key, encrypted_lengths[i]);
+        if (!decrypted) {
+            new_lines[valid_lines++] = nullptr;
+            continue;
+        }
+
+        Line* line = create_line_from_buffer((uint8_t*)decrypted);
+        if (line) {
+            line->deserialize((uint8_t*)decrypted, encrypted_lengths[i]);
+            new_lines[valid_lines++] = line;
+        } else {
+            new_lines[valid_lines++] = nullptr;
+        }
+    }
+    delete[] lines;
+    lines = new_lines;
+    num_lines = valid_lines;
+}

@@ -4,7 +4,7 @@
 #include <cstdio>
 
 CaesarCipher::CaesarCipher(char *dll_name) {
-    HINSTANCE handle = LoadLibrary(TEXT("caesar.dll"));
+    handle = LoadLibrary(TEXT("caesar.dll"));
     if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
         printf("Lib is not found");
         return;
@@ -22,18 +22,19 @@ CaesarCipher::CaesarCipher(char *dll_name) {
     }
 }
 
-char* CaesarCipher::encrypt(char* rawText, int key) {
-    return encrypt_ptr(rawText, key);
+char* CaesarCipher::encrypt(char* rawText, int key, int length) {
+    return encrypt_ptr(rawText, key, length);
 }
 
-char* CaesarCipher::decrypt(char* encryptedText, int key) {
-    return decrypt_ptr(encryptedText, key);
+char* CaesarCipher::decrypt(char* encryptedText, int key, int length) {
+    return decrypt_ptr(encryptedText, key, length);
 }
 
 
 CaesarCipher::~CaesarCipher() {
     FreeLibrary(handle);
 }
+
 
 
 

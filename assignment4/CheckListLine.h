@@ -1,5 +1,6 @@
 ﻿#ifndef CHECKLISTLINE_H
 #define CHECKLISTLINE_H
+#include <string.h>
 #include <string>
 
 #include "Line.h"
@@ -13,8 +14,19 @@ private:
     const char* prefix_task_uncompleted = "[ ] ";
     const char* prefix_task_completed = "[x] ";
 public:
-    CheckListLine(char* task, bool is_completed)
-    : task(task), is_completed(is_completed) {}
+    CheckListLine(const char* task_input, bool is_completed)
+    : is_completed(is_completed)
+    {
+        if (task_input) {
+            size_t len = strlen(task_input);
+            task = (char*)malloc(len + 1);
+            if (task) {
+                strcpy(task, task_input);
+            }
+        } else {
+            task = nullptr;
+        }
+    }
     uint8_t* serialize(uint32_t &length) override;
     void deserialize(uint8_t *buffer, uint32_t length) override;
     Line* copy() override;
