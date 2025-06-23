@@ -2,46 +2,56 @@
 #include <cstring>
 
 extern "C"{
+    static char* last_allocated = nullptr;
+
     __declspec(dllexport) const char* ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 
-    __declspec(dllexport) char* encrypt(char* rawText, int key) {
-        char* encrypted_text = new char[strlen(rawText) + 1];
+    __declspec(dllexport) char* encrypt(char* rawText, int key, int length) {
+        if (last_allocated) {
+            delete[] last_allocated;
+            last_allocated = nullptr;
+        }
+        last_allocated = new char[length];
         int position = 0;
 
-        for (int i = 0; i < strlen(rawText); i++) {
+        for (int i = 0; i < length; i++) {
             bool is_upper = isupper(rawText[i]);
 
             if (!isalpha(rawText[i])) {
-                encrypted_text[position++] = rawText[i];
+                last_allocated[position++] = rawText[i];
+                continue;
             }
-            else {
-                for (int j = 0; j < strlen(ALPHABET); j++) {
-                    if (tolower(rawText[i]) == ALPHABET[j]) {
-                        char encrypted_char = ALPHABET[(j + key) % 26];
+            for (int j = 0; j < strlen(ALPHABET); j++) {
+                if (tolower(rawText[i]) == ALPHABET[j]) {
+                    char encrypted_char = ALPHABET[(j + key) % 26];
 
-                        if (is_upper) {
-                            encrypted_char = toupper(encrypted_char);
-                        }
-                        encrypted_text[position++] = encrypted_char;
-                        break;
+                    if (is_upper) {
+                        encrypted_char = toupper(encrypted_char);
                     }
+                    last_allocated[position++] = encrypted_char;
+                    break;
                 }
             }
         }
-        encrypted_text[position] = '\0';
+        last_allocated[position] = '\0';
 
-        return encrypted_text;
+        return last_allocated;
     }
 
-    __declspec(dllexport) char* decrypt(char* encryptedText, int key) {
-        char* decrypted_text = new char[strlen(encryptedText) + 1];
+    __declspec(dllexport) char* decrypt(char* encryptedText, int key, int length) {
+        if (last_allocated) {
+            delete[] last_allocated;
+            last_allocated = nullptr;
+        }
         int position = 0;
+        last_allocated = new char[length];
 
-        for (int i = 0; i < strlen(encryptedText); i++) {
+        for (int i = 0; i < length; i++) {
             bool is_upper = isupper(encryptedText[i]);
 
             if (!isalpha(encryptedText[i])) {
-                decrypted_text[position++] = encryptedText[i];
+                last_allocated[position++] = encryptedText[i];
+                continue;;
             }
             for (int j = 0; j < strlen(ALPHABET); j++) {
                 if (tolower(encryptedText[i]) == ALPHABET[j]) {
@@ -50,16 +60,16 @@ extern "C"{
                     if (is_upper) {
                         decrypted_char = toupper(decrypted_char);
                     }
-                    decrypted_text[position++] = decrypted_char;
+                    last_allocated[position++] = decrypted_char;
                     break;
                 }
             }
         }
-        decrypted_text[position] = '\0';
+        last_allocated[position] = '\0';
 
-        return decrypted_text;
+        return last_allocated;
     }
-    }
+}
 
 
 
