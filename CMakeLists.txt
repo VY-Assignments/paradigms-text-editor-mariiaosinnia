@@ -9,6 +9,10 @@ add_executable(task1
         assignment1/functions.c
         assignment1/header.h
         assignment5/main.cpp
+        assignment5/FunctionNode.cpp
+        assignment5/FunctionNode.h
+        assignment5/OperatorNode.cpp
+        assignment5/OperatorNode.h
 )
 
 add_executable(task2
@@ -48,4 +52,11 @@ add_executable(task4
 )
 
 add_executable(task5
-        assignment5/main.cpp)
+        assignment5/main.cpp
+        assignment5/Node.h
+        assignment5/NumberNode.h
+        assignment5/VariableNode.h
+        assignment5/FunctionNode.cpp
+        assignment5/FunctionNode.h
+        assignment5/OperatorNode.cpp
+        assignment5/OperatorNode.h)
