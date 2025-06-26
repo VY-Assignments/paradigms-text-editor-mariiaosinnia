@@ -8,6 +8,7 @@ add_executable(task1
         assignment1/main.c
         assignment1/functions.c
         assignment1/header.h
+        assignment5/main.cpp
 )
 
 add_executable(task2
@@ -45,3 +46,6 @@ add_executable(task4
         assignment4/CaesarCipher.h
         assignment4/Line.cpp
 )
+
+add_executable(task5
+        assignment5/main.cpp)
