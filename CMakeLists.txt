@@ -59,4 +59,6 @@ add_executable(task5
         assignment5/FunctionNode.cpp
         assignment5/FunctionNode.h
         assignment5/OperatorNode.cpp
-        assignment5/OperatorNode.h)
+        assignment5/OperatorNode.h
+        assignment5/Tokenizer.cpp
+        assignment5/Tokenizer.h)
