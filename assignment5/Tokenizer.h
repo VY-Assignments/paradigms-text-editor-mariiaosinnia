@@ -8,11 +8,11 @@ class Tokenizer {
 private:
     std::vector<std::string> tokens;
     std::vector<std::string> functions = {"pow", "abs", "max", "min"};
-    std::vector<char> operators = {'+', '-', '*', '/', '(', ')', ','};
+    std::vector<char> operators = {'+', '-', '*', '/', '(', ')'};
 public:
     std::vector<std::string> tokenization(std::string& expression);
-    bool isFunction(std::string buffer);
-    bool isOperator(char ch);
+    bool isFunction(std::string& buffer);
+    bool isOperator(char& ch);
 };
 
 

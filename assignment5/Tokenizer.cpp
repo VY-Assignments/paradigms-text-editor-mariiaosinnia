@@ -43,7 +43,7 @@ std::vector<std::string> Tokenizer::tokenization(std::string& expression) {
     return tokens;
 }
 
-bool Tokenizer::isFunction(std::string buffer) {
+bool Tokenizer::isFunction(std::string& buffer) {
     for (std::string func:functions) {
         if (buffer == func) {
             return true;
@@ -52,7 +52,7 @@ bool Tokenizer::isFunction(std::string buffer) {
     return false;
 }
 
-bool Tokenizer::isOperator(char ch) {
+bool Tokenizer::isOperator(char& ch) {
     for (char oper : operators) {
         if (ch == oper) {
             return true;
