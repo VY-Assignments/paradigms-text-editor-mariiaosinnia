@@ -63,4 +63,8 @@ add_executable(task5
         assignment5/Tokenizer.cpp
         assignment5/Tokenizer.h
         assignment5/SortingStation.cpp
-        assignment5/SortingStation.h)
+        assignment5/SortingStation.h
+        assignment5/Evaluator.cpp
+        assignment5/Evaluator.h
+        assignment5/AST.cpp
+        assignment5/AST.h)
