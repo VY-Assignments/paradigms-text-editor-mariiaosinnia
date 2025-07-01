@@ -1,6 +1,6 @@
 ﻿#include "OperatorNode.h"
 
-double OperatorNode::evaluate(std::unordered_map<std::string, double>& vars) override {
+double OperatorNode::evaluate(std::unordered_map<std::string, double>& vars) {
     double l_num = left->evaluate(vars);
     double r_num = right->evaluate(vars);
 

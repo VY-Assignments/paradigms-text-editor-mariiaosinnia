@@ -15,6 +15,14 @@ void SortingStation::Sorting(std::vector<std::string> tokens) {
                 fromStackToQueue();
             }
             if (!stack.empty()) stack.pop();
+            if (!stack.empty() && isFunction(stack.top())) {
+                fromStackToQueue();
+            }
+        }
+        else if (token == ",") {
+            while (!stack.empty() && stack.top() != "(") {
+                fromStackToQueue();
+            }
         }
         else if (isOperator(token)) {
             while (!stack.empty() && stack.top() != "(" &&
@@ -29,6 +37,16 @@ void SortingStation::Sorting(std::vector<std::string> tokens) {
         fromStackToQueue();
     }
 }
+
+std::vector<std::string> SortingStation::getRPN() {
+    std::vector<std::string> rpn;
+    while (!queue.empty()) {
+        rpn.push_back(queue.front());
+        queue.pop();
+    }
+    return rpn;
+}
+
 
 bool SortingStation::isNumber(std::string& token) {
     try {

@@ -31,6 +31,7 @@ private:
 public:
     SortingStation(std::vector<std::string>& t) : tokens(t){};
     void Sorting(std::vector<std::string> tokens);
+    std::vector<std::string> getRPN();
     bool isNumber(std::string& token);
     bool isOperator(std::string& ch);
     void fromStackToQueue();
