@@ -8,6 +8,14 @@ std::vector<std::string> Tokenizer::tokenization(std::string& expression) {
     for (int i = 0; i < expression.length(); i++) {
         char ch = expression[i];
         if (std::isspace(ch)) {
+            if (!number.empty()) {
+                tokens.push_back(number);
+                number.clear();
+            }
+            if (!identifier.empty()) {
+                tokens.push_back(identifier);
+                identifier.clear();
+            }
             continue;
         }
         if (std::isdigit(ch) || ch == '.') {

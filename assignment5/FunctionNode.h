@@ -12,6 +12,10 @@ private:
     Node* arg2;
 public:
     FunctionNode(std::string& n, Node* a1, Node* a2) : name(n), arg1(a1), arg2(a2){};
+    ~FunctionNode() override{
+        delete arg1;
+        delete arg2;
+    }
     double evaluate(std::unordered_map<std::string, double> &vars) override;
 };
 

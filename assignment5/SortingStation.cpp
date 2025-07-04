@@ -1,5 +1,5 @@
 ﻿#include "SortingStation.h"
-void SortingStation::Sorting(std::vector<std::string> tokens) {
+void SortingStation::Sorting(std::vector<std::string>& tokens) {
     for (std::string token : tokens) {
         if (isNumber(token)) {
             queue.push(token);

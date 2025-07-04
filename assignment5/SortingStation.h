@@ -10,7 +10,6 @@
 
 class SortingStation {
 private:
-    std::vector<std::string> tokens;
     std::unordered_map<std::string, int> priority = {
         {"=", 1},
         {"+", 2},
@@ -22,21 +21,20 @@ private:
         {"max", 4},
         {"min", 4}
     };
-    //std::queue<std::string> queue;
+    std::queue<std::string> queue;
     std::stack<std::string> stack;
     std::vector<std::string> rpn;
 
     std::vector<std::string> operators = {"+", "-", "*", "/", "(", ")"};
     std::vector<std::string> functions = {"pow", "abs", "max", "min"};
 public:
-    SortingStation(std::vector<std::string>& t) : tokens(t){};
-    void Sorting(std::vector<std::string> tokens);
+    SortingStation(){};
+    void Sorting(std::vector<std::string>& tokens);
     std::vector<std::string> getRPN();
     bool isNumber(std::string& token);
     bool isOperator(std::string& ch);
     void fromStackToQueue();
     bool isFunction(std::string& token);
-    std::queue<std::string> queue;
 };
 
 

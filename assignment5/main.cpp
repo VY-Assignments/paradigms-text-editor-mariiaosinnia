@@ -1,32 +1,45 @@
 ﻿#include <iostream>
 #include <string>
 
+#include "AST.h"
+#include "Interpreter.h"
+#include "Node.h"
 #include "SortingStation.h"
 #include "Tokenizer.h"
 
 int main() {
-    std::string input;
-    std::cout << "Enter an expression: ";
-    std::getline(std::cin, input);
-
     Tokenizer tokenizer;
-    std::vector<std::string> tokens = tokenizer.tokenization(input);
+    SortingStation shunting;
+    AST ast;
+    Interpreter interpreter(&shunting, &ast);
 
-    std::cout << "Tokens:\n";
-    for (const auto& t : tokens) {
-        std::cout << t << " ";
+    std::string input;
+
+    while (true) {
+        std::cout << ">>> ";
+        std::getline(std::cin, input);
+
+        if (input == "exit") break;
+        if (input.empty()) continue;
+
+        std::vector<std::string> tokens = tokenizer.tokenization(input);
+
+        if (tokens.empty()) continue;
+
+        try {
+            if (tokens[0] == "var") {
+                interpreter.setVariable(tokens);
+            } else {
+                shunting.Sorting(tokens);
+                std::vector<std::string> rpn = shunting.getRPN();
+                Node* root = ast.buildtree(rpn);
+                double result = root->evaluate(interpreter.getVars());
+                std::cout << result << std::endl;
+            }
+        } catch (std::exception& e) {
+            std::cout << "Error: " << e.what() << std::endl;
+        }
     }
-    std::cout << "\n";
-
-    SortingStation station(tokens);
-    station.Sorting(tokens);
-
-    std::cout << "RPN:\n";
-    while (!station.queue.empty()) {
-        std::cout << station.queue.front() << " ";
-        station.queue.pop();
-    }
-    std::cout << "\n";
 
     return 0;
 }

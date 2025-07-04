@@ -6,7 +6,7 @@
 
 class Node {
 public:
-    virtual ~Node() = default;
+    virtual ~Node() {}
     virtual double evaluate(std::unordered_map<std::string, double>& vars) = 0;
 };
 
