@@ -27,9 +27,9 @@ int main() {
         if (tokens.empty()) continue;
 
         try {
-            if (tokens[0] == "var") {
-                interpreter.setVariable(tokens);
-            } else {
+            if (tokens[0] == "var") interpreter.setVariable(tokens);
+            else if (tokens[0] == "def") interpreter.defineFunction(tokens);
+            else {
                 shunting.Sorting(tokens);
                 std::vector<std::string> rpn = shunting.getRPN();
                 Node* root = ast.buildtree(rpn);

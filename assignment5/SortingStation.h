@@ -35,6 +35,7 @@ public:
     bool isOperator(std::string& ch);
     void fromStackToQueue();
     bool isFunction(std::string& token);
+    void addCustomFunc(std::string& name, int precedence);
 };
 
 

@@ -7,12 +7,15 @@
 #include "AST.h"
 #include "SortingStation.h"
 
+struct userFunc {
+    std::vector<std::string> params;
+    std::vector<std::string> body;
+};
 
 class Interpreter {
 private:
     std::unordered_map<std::string, double> vars;
-    std::unordered_map<std::string, std::string> userFuncs;
-
+    std::unordered_map<std::string, userFunc> userFuncs;
     SortingStation* sortingStation;
     AST* ast;
 public:
@@ -20,6 +23,9 @@ public:
 
     ~Interpreter() = default;
     void setVariable(std::vector<std::string>& tokens);
+    void setFunc(std::vector<std::string>& tokens);
+    void defineFunction(std::vector<std::string>& tokens);
+
 
     std::unordered_map<std::string, double>& getVars() {
         return vars;

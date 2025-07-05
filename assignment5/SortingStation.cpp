@@ -79,3 +79,8 @@ void SortingStation::fromStackToQueue() {
     stack.pop();
 }
 
+void SortingStation::addCustomFunc(std::string &name, int precedence) {
+    priority[name] = precedence;
+    functions.push_back(name);
+}
+
