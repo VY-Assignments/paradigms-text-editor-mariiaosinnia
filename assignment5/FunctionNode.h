@@ -2,6 +2,7 @@
 #define FUNCTIONNODE_H
 #include <string>
 
+#include "Interpreter.h"
 #include "Node.h"
 
 

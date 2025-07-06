@@ -30,7 +30,7 @@ void Interpreter::setVariable(std::vector<std::string> &tokens) {
 }
 
 void Interpreter::defineFunction(std::vector<std::string> &tokens) {
-    if (tokens.size() < 8) {
+    if (tokens.size() < 6) {
         std::cout << "Invalid function definition\n";
         return;
     }
@@ -51,9 +51,33 @@ void Interpreter::defineFunction(std::vector<std::string> &tokens) {
         }
     }
 
-    int body_start = i + 2;
-    int body_end = tokens.size() - 1;
+    int body_start = i + 1;
+    int body_end = tokens.size();
     std::vector<std::string> body(tokens.begin() + body_start, tokens.begin() + body_end);
     userFuncs[funcName] = {params, body};
     std::cout << "Function '" << funcName << "' defined.\n";
 }
+
+double Interpreter::callCustomFunc(std::string name, std::vector<double> args) {
+    if (!userFuncs.count(name)) {
+        throw std::runtime_error("Function not found");
+
+    }
+
+    userFunc func = userFuncs[name];
+    if (args.size() != func.params.size()) {
+        throw std::runtime_error("Incorrect number of arguments for function");
+    }
+
+    std::unordered_map<std::string, double> localVars;
+    for (int i = 0; i < args.size(); i++) {
+        localVars[func.params[i]] = args[i];
+    }
+
+    sortingStation->Sorting(func.body);
+    std::vector<std::string> rpn = sortingStation->getRPN();
+    Node* root = ast->buildtree(rpn);
+    double result = root->evaluate(localVars);
+    return result;
+}
+
