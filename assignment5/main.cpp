@@ -16,7 +16,6 @@ int main() {
     std::string input;
 
     while (true) {
-        std::cout << ">>> ";
         std::getline(std::cin, input);
 
         if (input == "exit") break;
@@ -30,7 +29,7 @@ int main() {
             if (tokens[0] == "var") interpreter.setVariable(tokens);
             else if (tokens[0] == "def") interpreter.defineFunction(tokens);
             else if (tokens[1]  == "(") {
-                if (interpreter.getVars().count(tokens[0])) {
+                if (interpreter.getUserFuncs().count(tokens[0])) {
                     std::string name = tokens[0];
                     std::vector<double> args;
                     for (int i = 2; i < tokens.size(); i++) {

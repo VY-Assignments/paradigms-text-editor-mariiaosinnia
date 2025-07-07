@@ -29,6 +29,9 @@ public:
     std::unordered_map<std::string, double>& getVars() {
         return vars;
     }
+    std::unordered_map<std::string, userFunc> getUserFuncs() {
+        return userFuncs;
+    }
 };
 
 

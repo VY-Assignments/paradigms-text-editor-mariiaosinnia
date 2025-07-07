@@ -55,7 +55,6 @@ void Interpreter::defineFunction(std::vector<std::string> &tokens) {
     int body_end = tokens.size();
     std::vector<std::string> body(tokens.begin() + body_start, tokens.begin() + body_end);
     userFuncs[funcName] = {params, body};
-    std::cout << "Function '" << funcName << "' defined.\n";
 }
 
 double Interpreter::callCustomFunc(std::string name, std::vector<double> args) {

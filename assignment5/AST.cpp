@@ -19,12 +19,20 @@ Node *AST::buildtree(std::vector<std::string> &tokens) {
             stack.push(new OperatorNode(token[0],left, right));
         }
         else if (isFunction(token)) {
-            if (stack.size() < 2) {
-                throw std::runtime_error("Not enough arguments for function: " + token);
+            if (token == "abs") {
+                if (stack.empty()) {
+                    throw std::runtime_error("Not enough arguments for function: " + token);
+                }
+                Node* arg = stack.top(); stack.pop();
+                stack.push(new FunctionNode(token, arg, nullptr));
+            } else {
+                if (stack.size() < 2) {
+                    throw std::runtime_error("Not enough arguments for function: " + token);
+                }
+                Node* right = stack.top(); stack.pop();
+                Node* left = stack.top(); stack.pop();
+                stack.push(new FunctionNode(token, left, right));
             }
-            Node* right = stack.top(); stack.pop();
-            Node* left = stack.top(); stack.pop();
-            stack.push(new FunctionNode(token, left, right));
         }
         else {
             stack.push(new VariableNode(token));
