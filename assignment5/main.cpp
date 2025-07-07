@@ -32,10 +32,21 @@ int main() {
                 if (interpreter.getUserFuncs().count(tokens[0])) {
                     std::string name = tokens[0];
                     std::vector<double> args;
+                    std::vector<std::string> currentArg;
                     for (int i = 2; i < tokens.size(); i++) {
-                        if (tokens[i] == ")") break;
-                        if (tokens[i] == ",") continue;
-                        args.push_back(std::stod(tokens[i]));
+                        if (tokens[i] == "," || tokens[i] == ")") {
+                            if (!currentArg.empty()) {
+                                shunting.Sorting(currentArg);
+                                std::vector<std::string> rpn = shunting.getRPN();
+                                Node* root = ast.buildtree(rpn);
+                                double val = root->evaluate(interpreter.getVars());
+                                args.push_back(val);
+                                currentArg.clear();
+                            }
+                            if (tokens[i] == ")") break;
+                        } else {
+                            currentArg.push_back(tokens[i]);
+                        }
                     }
                     double result = interpreter.callCustomFunc(name, args);
                     std::cout << result << std::endl;
