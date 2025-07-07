@@ -18,6 +18,14 @@ std::vector<std::string> Tokenizer::tokenization(std::string& expression) {
             }
             continue;
         }
+        if (ch == '-' && (i == 0 || expression[i - 1] == '(' || expression[i - 1] == ',' ||
+        isOperator(expression[i - 1]))) {
+            if (i + 1 < expression.length() && (std::isdigit(expression[i + 1]) || expression[i + 1] == '.')) {
+                number += ch;
+                continue;
+            }
+        }
+
         if (std::isdigit(ch) || ch == '.') {
             number += ch;
             continue;
