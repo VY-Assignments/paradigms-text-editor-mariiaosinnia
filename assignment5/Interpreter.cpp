@@ -1,8 +1,8 @@
 ﻿#include "Interpreter.h"
-
 #include <iostream>
-
 #include "Node.h"
+#include <algorithm>
+#include <iterator>
 
 void Interpreter::setVariable(std::vector<std::string> &tokens) {
     if (tokens.size() < 4) {
@@ -40,22 +40,18 @@ void Interpreter::defineFunction(std::vector<std::string> &tokens) {
         std::cout << "Invalid function definition\n";
         return;
     }
-    int i = 3;
-    std::vector<std::string> params;
-    while (tokens[i] != ")") {
-        if (tokens[i] != ",") {
-            params.push_back(tokens[i]);
-        }
-        i++;
-        if (i >= tokens.size()) {
-            std::cout << "Invalid parameters\n";
-            return;
-        }
+    auto close_paren = std::find(tokens.begin() + 3, tokens.end(), ")");
+    if (close_paren == tokens.end()) {
+        std::cout << "Invalid parameters\n";
+        return;
     }
 
-    int body_start = i + 1;
-    int body_end = tokens.size();
-    std::vector<std::string> body(tokens.begin() + body_start, tokens.begin() + body_end);
+    std::vector<std::string> params;
+    std::copy_if(tokens.begin() + 3, close_paren, std::back_inserter(params),
+        [](std::string& token) { return token != ","; });
+
+    auto body_start = close_paren + 1;
+    std::vector<std::string> body(body_start, tokens.end());
     userFuncs[funcName] = {params, body};
 }
 

@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <cmath>
+#include <functional>
 
 double FunctionNode::evaluate(std::unordered_map<std::string, double> &vars) {
     double num1 = 0;
@@ -9,9 +10,17 @@ double FunctionNode::evaluate(std::unordered_map<std::string, double> &vars) {
     double num2 = 0;
     if (arg2) num2 = arg2->evaluate(vars);
 
-    if (name == "max") return std::max(num1, num2);
-    else if (name == "min") return std::min(num1, num2);
-    else if (name == "pow") return std::pow(num1, num2);
-    else if (name == "abs") return std::abs(num1);
-    else throw std::runtime_error("Unknown function: " + name);
+    std::unordered_map<std::string, std::function<double(double, double)>> binFuncs = {
+        {"max", [](double a, double b) { return std::max(a, b); }},
+        {"min", [](double a, double b) { return std::min(a, b); }},
+        {"pow", [](double a, double b) { return std::pow(a, b); }}
+    };
+    std::unordered_map<std::string, std::function<double(double)>> unFuncs = {
+        {"abs", [](double a) { return std::abs(a); }}
+    };
+
+    if (binFuncs.find(name) != binFuncs.end()) return binFuncs.at(name)(num1, num2);
+    if (unFuncs.find(name) != unFuncs.end()) return unFuncs.at(name)(num1);
+
+    throw std::runtime_error("Unknown function: " + name);
 }
