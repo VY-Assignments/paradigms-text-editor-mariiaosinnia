@@ -24,6 +24,7 @@ def test_task5():
         {"input": "var a = 8", "expected_output": None},
         {"input": "pow(2, 3) + max(4, min(8, 6)) * a - abs(-7)", "expected_output": "49"},
         {"input": "def myfunc(a, b) { max(a, b) + min(a, b) }", "expected_output": None},
+        {"input": "max(min(3 * 2, 2), 2)", "expected_output": "2"},
         {"input": "myfunc(3, 4)", "expected_output": "7"},
         {"input": "x + y", "expected_output": "25"},
     ]

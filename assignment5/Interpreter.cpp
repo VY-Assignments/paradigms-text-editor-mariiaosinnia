@@ -43,7 +43,9 @@ void Interpreter::defineFunction(std::vector<std::string> &tokens) {
     int i = 3;
     std::vector<std::string> params;
     while (tokens[i] != ")") {
-        params.push_back(tokens[i]);
+        if (tokens[i] != ",") {
+            params.push_back(tokens[i]);
+        }
         i++;
         if (i >= tokens.size()) {
             std::cout << "Invalid parameters\n";

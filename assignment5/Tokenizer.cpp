@@ -46,6 +46,10 @@ std::vector<std::string> Tokenizer::tokenization(std::string& expression) {
             }
             identifier.clear();
         }
+        if (ch == ',') {
+            tokens.push_back(",");
+            continue;
+        }
         if (isOperator(ch)) {
             tokens.push_back(std::string(1, ch));
         }

@@ -33,9 +33,9 @@ int main() {
                     std::string name = tokens[0];
                     std::vector<double> args;
                     for (int i = 2; i < tokens.size(); i++) {
-                        if (tokens[i] != ")") {
-                            args.push_back(std::stod(tokens[i]));
-                        }
+                        if (tokens[i] == ")") break;
+                        if (tokens[i] == ",") continue;
+                        args.push_back(std::stod(tokens[i]));
                     }
                     double result = interpreter.callCustomFunc(name, args);
                     std::cout << result << std::endl;

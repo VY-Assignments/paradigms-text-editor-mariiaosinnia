@@ -7,6 +7,7 @@
 
 Node *AST::buildtree(std::vector<std::string> &tokens) {
     for (std::string token : tokens) {
+        if (token == ",") continue;
         if (isNumber(token)) {
             stack.push(new NumberNode(std::stod(token)));
         }
