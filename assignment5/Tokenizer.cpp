@@ -25,7 +25,10 @@ std::vector<std::string> Tokenizer::tokenization(std::string& expression) {
                 continue;
             }
         }
-
+        if (std::isalnum(ch)) {
+            identifier += ch;
+            continue;
+        }
         if (std::isdigit(ch) || ch == '.') {
             number += ch;
             continue;
@@ -33,10 +36,6 @@ std::vector<std::string> Tokenizer::tokenization(std::string& expression) {
         if (!number.empty()) {
             tokens.push_back(number);
             number.clear();
-        }
-        if (std::isalnum(ch)) {
-            identifier += ch;
-            continue;
         }
         if (!identifier.empty()) {
             if (i + 1 < expression.length() && expression[i + 1] == '(' && isFunction(identifier)) {
